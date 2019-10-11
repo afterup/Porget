@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="userList">    
+	<!-- 회원가입 -->
+	<insert id="insert">
+		insert into userList (uname, upass, uemail, uphoto, uinfo, enabled) 
+						values (#{uname}, #{upass}, #{uemail},#{uphoto},null,1)
+	</insert>
+	
+	<insert id="insertAuth">
+		insert into userlist_auth (uname,auth) values (#{uname},'ROLE_USER')
+	</insert>
+	
+	<insert id="insertAuth2">
+		insert into userlist_auth (uname,auth) values (#{uname},'ROLE_RECRU')
+	</insert>
+	
+	<!-- 로그인 -->
+	<select id="login" resultType="HashMap"> <!-- count(*) -> sql 관련된 함수/ 갯수를 세어주는 함수 ///현재는1,0  -->
+		select uname, uphoto
+		from userList
+		where uemail=#{uemail} and upass=#{upass}
+	</select>
+	
+	<select id="loginRecruiter" resultType="String">
+		select uname 
+		from userList
+		where uemail=#{uemail} and upass=#{upass}
+	</select>
+	
+	
+	<!-- 닉네임 중복확인 -->
+	<select id="idCheck" resultType="int">
+		select count(*) from userList
+		where uname = #{uname}
+	</select>
+	
+	<!-- 이메일 중복확인 -->
+	<select id="emailCheck" resultType="int">
+		select count(*) from userList
+		where uemail = #{uemail}
+	</select>
+	
+	<!-- 마이페이지 -->
+	<select id="selectUser" resultType="UserVO">
+		SELECT * FROM userlist WHERE uname = #{uname}
+	</select>
+	
+	<update id="changeUname">
+		UPDATE userlist SET uname = #{uname}
+	</update>
+	
+	
+	<select id="selectPortfolio" resultType="PortfolioVO">
+		SELECT * FROM portfolio WHERE uname= #{uname}
+	</select>
+	
+	<update id="changeUphotho">
+		update userlist set uphoto=#{uphoto} where uname=#{uname}
+	</update>
+	
+	<select id="likePortfolio" resultType="PortfolioVO">
+		select pfname, pfdate, pfthumb, uname, pfposition
+		from portfolio where 
+		pfnum IN(select pfnum from recommend where uname = #{uname})
+	</select>
+	
+	<delete id="breakMember">
+		delete from userlist where uname = #{uname}
+	</delete>
+	
+	<!-- 시큐리티 -->
+	<resultMap type="com.porget.domain.UserVO" id="userMap">
+		<id property="uname" column ="uname"></id>
+		<result property="uname" column="uname"/>
+		<result property="upass" column="upass"/>
+		<result property="uemail" column="uemail"/>
+		<result property="uphoto" column="uphoto"/>
+		<result property="uinfo" column="uinfo"/>
+		<result property="enabled" column="enabled"/>
+		<collection property="authList" resultMap="authMap"></collection>
+	</resultMap>
+	
+	<resultMap type="com.porget.domain.AuthVO" id="authMap">
+		<result property="uname" column="uname"/>
+		<result property="auth" column="auth"/>
+	</resultMap>
+	
+	
+	<select id="read" resultMap="userMap">
+		select u.uname, upass, uemail, uphoto, uinfo, enabled, auth
+			from userlist u left outer join userlist_auth auth
+			on u.uname = auth.uname
+			where u.uemail = #{uemail}
+	</select>
+	
+
+</mapper>
